@@ -1,0 +1,111 @@
+{
+  "id": "speko",
+  "name": "Speko",
+  "description": "Benchmark-routed LLM, speech and transcription behind one Speko key.",
+  "version": "0.1.0",
+  "providers": ["speko"],
+  "modelSupport": {
+    "modelPrefixes": ["speko:", "speko/"]
+  },
+  "setup": {
+    "providers": [
+      {
+        "id": "speko",
+        "envVars": ["SPEKO_API_KEY"]
+      }
+    ]
+  },
+  "providerAuthChoices": [
+    {
+      "provider": "speko",
+      "method": "api-key",
+      "choiceId": "speko-api-key",
+      "choiceLabel": "Speko API key",
+      "groupId": "speko",
+      "groupLabel": "Speko",
+      "cliFlag": "--speko-api-key",
+      "cliOption": "--speko-api-key <key>",
+      "cliDescription": "Speko API key"
+    }
+  ],
+  "contracts": {
+    "speechProviders": ["speko"],
+    "mediaUnderstandingProviders": ["speko"],
+    "usageProviders": [],
+    "tools": ["speko_routing_preview", "speko_models"]
+  },
+  "mediaUnderstandingProviderMetadata": {
+    "speko": {
+      "defaultModels": { "audio": "auto" },
+      "authSignals": { "envVars": ["SPEKO_API_KEY"] }
+    }
+  },
+  "toolMetadata": {
+    "speko_routing_preview": {
+      "authSignals": { "envVars": ["SPEKO_API_KEY"] }
+    },
+    "speko_models": {
+      "authSignals": { "envVars": ["SPEKO_API_KEY"] }
+    }
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "apiKey": {
+        "type": "string",
+        "description": "Speko API key. Falls back to SPEKO_API_KEY."
+      },
+      "baseUrl": {
+        "type": "string",
+        "description": "Router base URL. Defaults to https://api.speko.ai/v1."
+      },
+      "language": {
+        "type": "string",
+        "description": "BCP 47 language tag. Drives benchmark selection and the vendor's own language setting."
+      },
+      "objective": {
+        "type": "string",
+        "enum": ["latency", "cost", "quality", "balanced"],
+        "description": "Which measured axis wins when candidates tie."
+      },
+      "allow": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "Candidate allow-list. Entries must be provider:model; bare provider names match nothing."
+      },
+      "deny": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "Candidate deny-list. Does not clear the key's own policy chain."
+      },
+      "maxPrice": {
+        "type": "number",
+        "minimum": 0,
+        "description": "Price ceiling in the routed stage's unit: STT USD/minute, LLM USD/1M tokens, TTS USD/1M characters."
+      },
+      "tts": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "model": { "type": "string", "description": "Candidate filter, or auto." },
+          "voice": { "type": "string", "description": "Provider voice id." },
+          "instructions": { "type": "string", "description": "Delivery direction: speaking style or accent." },
+          "speed": { "type": "number", "description": "Passed through where the vendor supports it." }
+        }
+      },
+      "stt": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "model": { "type": "string", "description": "Candidate filter, or auto." }
+        }
+      }
+    }
+  },
+  "activation": {
+    "onStartup": true,
+    "providers": ["speko"],
+    "capabilities": ["provider", "speech", "media-understanding", "tool"]
+  }
+}

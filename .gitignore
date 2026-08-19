@@ -1,0 +1,5 @@
+node_modules/
+dist/
+.clawhub-validation/
+*.tgz
+.DS_Store
