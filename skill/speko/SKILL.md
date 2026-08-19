@@ -1,6 +1,6 @@
 ---
 name: speko
-description: Use Speko to transcribe audio, synthesize speech, and pick the model for each leg of a voice pipeline from measured benchmarks instead of a hardcoded vendor. One key covers STT, LLM and TTS across 50+ models, with a dry-run route preview, per-language selection, price ceilings and automatic failover. Also places outbound AI phone calls. Use when asked to transcribe a recording or voice note, read something aloud, choose or justify a speech model, work in a language other than English, cap voice spend, or make a phone call.
+description: Use Speko to transcribe audio, synthesize speech, and pick the model for each leg of a voice pipeline from measured benchmarks instead of a hardcoded vendor. One key covers STT, LLM and TTS across 50+ models, with a dry-run route preview, per-language selection, price ceilings and automatic failover. Use when asked to transcribe a recording or voice note, read something aloud, choose or justify a speech model, work in a language other than English, or cap voice spend. For placing phone calls, use the speko-calls skill instead.
 metadata:
   openclaw:
     requires:
@@ -93,28 +93,18 @@ Read back what actually happened: `x-route` is the vendor and model that answere
 `/v1/chat/completions` is OpenAI-shaped, so any OpenAI client works unchanged with
 `base_url=https://api.speko.ai/v1`. `model: "auto"` routes on benchmarks; a routable id pins.
 
-## Place an outbound AI phone call
+## Phone calls are a separate skill
 
-Telephony lives on a **different host and needs a different key**: the platform API at
-`https://api.speko.dev/v1` with a platform key. It does not share credentials with the router.
-
-```bash
-curl -s https://api.speko.dev/v1/sessions/phone \
-  -H "Authorization: Bearer $SPEKO_PLATFORM_API_KEY" -H "Content-Type: application/json" \
-  -d '{"to":"+15551234567","intent":{"language":"en"},"systemPrompt":"You are..."}'
-```
-
-Only `to` is required, in E.164. Either `agentId` or `intent` — an ad-hoc call needs no
-pre-created agent. `from` must be a number the org owns; `GET /v1/phone-numbers` lists them
-(kebab-case — `/v1/phone_numbers` 404s). Poll `GET /v1/calls/{id}` for status and transcript.
-
-**Confirm the number and the purpose with the user before dialing.** A call rings a real
-phone and cannot be undone.
+This skill never places calls and never asks for a calling credential. Outbound telephony runs
+on a different host with a different, higher-impact key, so it lives in the companion skill
+`speko-calls`, which declares that credential itself and is only eligible once it is present.
 
 ## Gotchas
 
-- Two hosts, two keys: `api.speko.ai` is the router (STT/LLM/TTS), `api.speko.dev` is the
-  platform (agents, phone numbers, calls). A key for one returns 401 on the other.
+- Two hosts, two keys: `api.speko.ai` is the router (STT/LLM/TTS) and is the only host this
+  skill uses; `api.speko.dev` is the platform (agents, phone numbers, calls) and needs its own
+  key. A key for one returns 401 on the other, and the hosted MCP at `mcp.speko.ai` rejects a
+  router key outright — it wants a platform key or OAuth.
 - Keys are environment-scoped: a staging key fails against production.
 - `X-Speko-Allow` with a bare provider name silently matches nothing. Always `provider:model`.
 - A `200` from a streaming TTS route can still be empty. Check the byte count.
