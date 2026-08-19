@@ -34,6 +34,19 @@ export type SpekoPluginConfig = {
 
 export const SPEKO_DEFAULT_BASE_URL = "https://api.speko.ai/v1";
 
+/**
+ * Shipped default language.
+ *
+ * Without a header the router falls back to whatever language the API key's
+ * policy carries, which is invisible from here and is not always English — a
+ * first run can quietly come back in another language and read as a bug. So the
+ * plugin is explicit by default and `"auto"` opts back into the key's policy.
+ */
+export const SPEKO_DEFAULT_LANGUAGE = "en";
+
+/** Sentinel that means "send no language header; defer to the key's policy". */
+export const SPEKO_LANGUAGE_AUTO = "auto";
+
 export function normalizeSpekoBaseUrl(baseUrl: string | undefined): string {
   const raw = (baseUrl ?? SPEKO_DEFAULT_BASE_URL).trim();
   return raw.replace(/\/+$/, "");
@@ -56,13 +69,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * Builds the `X-Speko-*` routing headers. Only set fields are emitted so an
- * unset field falls through to the API key's own policy rather than
- * overwriting it with a default.
+ * Builds the `X-Speko-*` routing headers. Every field except `language` falls
+ * through to the API key's own policy when unset; `language` defaults to `en` so
+ * a first run is predictable, and `"auto"` restores the fall-through.
  */
 export function buildRoutingHeaders(config: SpekoPluginConfig): Record<string, string> {
   const headers: Record<string, string> = {};
-  if (config.language) headers["X-Speko-Language"] = config.language;
+  const language = config.language ?? SPEKO_DEFAULT_LANGUAGE;
+  if (language !== SPEKO_LANGUAGE_AUTO) headers["X-Speko-Language"] = language;
   if (config.objective) headers["X-Speko-Objective"] = config.objective;
   if (config.allow?.length) headers["X-Speko-Allow"] = config.allow.join(",");
   if (config.deny?.length) headers["X-Speko-Deny"] = config.deny.join(",");

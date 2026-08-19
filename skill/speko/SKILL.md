@@ -29,11 +29,13 @@ someone asks which model will be used, or to check that a language or price ceil
 the stack they wanted.
 
 ```bash
-curl -s "https://api.speko.ai/v1/routing/preview?stage=tts&language=hi&objective=quality" \
+curl -s "https://api.speko.ai/v1/routing/preview?stage=tts&language=en&objective=quality" \
   -H "Authorization: Bearer $SPEKO_API_KEY" | jq '{id, provider, reason, evidence, measured}'
 ```
 
 `stage` is `stt`, `llm` or `tts`. `objective` is `latency`, `cost`, `quality` or `balanced`.
+`language` defaults to `en`; swap it for any BCP 47 tag to see the route change — the picked
+vendor genuinely differs per language, which is the whole point of asking.
 `evidence: "measured"` means the pick rests on benchmark data rather than a fallback, and
 `measured` is the date window those readings came from. Quote both when you explain a choice —
 they are why the answer is trustworthy.
@@ -78,7 +80,7 @@ Any request accepts these headers, and a request header always beats the key's p
 
 | Header | Effect |
 | --- | --- |
-| `X-Speko-Language` | BCP 47. Drives benchmark selection and the vendor's own language setting. Regional tags (`es-MX`) are fine. |
+| `X-Speko-Language` | BCP 47, default `en`. Drives benchmark selection and the vendor's own language setting. Regional tags (`es-MX`) are fine. |
 | `X-Speko-Objective` | `latency`, `cost`, `quality` or `balanced`. Which measured axis wins when candidates tie. |
 | `X-Speko-Allow` | CSV of `provider:model`. Restricts candidates **and** replaces the key's chain. Bare provider names match nothing. |
 | `X-Speko-Deny` | CSV of `provider:model`. Excludes candidates without clearing the chain. |

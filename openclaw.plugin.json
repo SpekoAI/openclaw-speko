@@ -2,7 +2,7 @@
   "id": "speko",
   "name": "Speko",
   "description": "Benchmark-routed LLM, speech and transcription behind one Speko key.",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "providers": [
     "speko"
   ],
@@ -90,7 +90,7 @@
       },
       "language": {
         "type": "string",
-        "description": "BCP 47 language tag. Drives benchmark selection and the vendor's own language setting."
+        "description": "BCP 47 language tag. Defaults to en so a first run is predictable. Set \"auto\" to send no language header and let the API key's own routing policy decide."
       },
       "objective": {
         "type": "string",

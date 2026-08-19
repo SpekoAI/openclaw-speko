@@ -9,8 +9,19 @@ import {
 } from "./config.js";
 
 describe("routing headers", () => {
-  it("emits nothing when no override is configured, so the key policy stands", () => {
-    expect(buildRoutingHeaders({})).toEqual({});
+  it("defaults to English so a first run is predictable, not key-policy roulette", () => {
+    expect(buildRoutingHeaders({})).toEqual({ "X-Speko-Language": "en" });
+  });
+
+  it("sends no language header on \"auto\", handing the choice back to the key policy", () => {
+    expect(buildRoutingHeaders({ language: "auto" })).toEqual({});
+  });
+
+  it("leaves every other axis to the key policy when unset", () => {
+    const headers = buildRoutingHeaders({ language: "auto" });
+    expect(headers["X-Speko-Objective"]).toBeUndefined();
+    expect(headers["X-Speko-Allow"]).toBeUndefined();
+    expect(headers["X-Speko-Max-Price"]).toBeUndefined();
   });
 
   it("maps every override onto its documented header", () => {
@@ -33,6 +44,10 @@ describe("routing headers", () => {
 
   it("keeps a zero price ceiling, which is a real constraint and not an absent one", () => {
     expect(buildRoutingHeaders({ maxPrice: 0 })["X-Speko-Max-Price"]).toBe("0");
+  });
+
+  it("still honours an explicit non-English language", () => {
+    expect(buildRoutingHeaders({ language: "hi" })["X-Speko-Language"]).toBe("hi");
   });
 });
 

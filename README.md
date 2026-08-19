@@ -49,7 +49,7 @@ key's policy.
     "entries": {
       "speko": {
         "config": {
-          "language": "hi",
+          "language": "en",
           "objective": "quality",
           "maxPrice": 40,
           "deny": ["elevenlabs:eleven_v3"],
@@ -63,7 +63,7 @@ key's policy.
 
 | Field | Meaning |
 | --- | --- |
-| `language` | BCP 47. Drives benchmark selection and the vendor's own language setting. |
+| `language` | BCP 47, **default `en`**. Drives benchmark selection and the vendor's own language setting. Set `"auto"` to send no language header and defer to the API key's own routing policy. |
 | `objective` | `latency`, `cost`, `quality` or `balanced` — which measured axis wins on a tie. |
 | `allow` | Candidate allow-list. Must be `provider:model`; bare provider names match nothing. It also replaces the key's chain. |
 | `deny` | Candidate deny-list. Does not clear the key's chain. |
@@ -87,6 +87,12 @@ selected or pinned.
 - **Context windows are conservative defaults.** `/v1/models` does not publish a per-vendor
   window, and the router holds the real one, so this plugin advertises 128k rather than
   guessing higher.
+- **The language default is deliberate.** Without a language header the router falls back to
+  whatever the API key's policy carries, which is invisible from OpenClaw and is not always
+  English — a first run could quietly come back in another language and read as a bug. So the
+  plugin sends `en` unless you set `language`. Use `"auto"` to hand the choice back to the key.
+- **Trusting the plugin for agent runs needs one line.** OpenClaw will not auto-trust a
+  non-bundled plugin's tools until you allow it: `"plugins": { "allow": ["speko"] }`.
 - **Telephony is a different host and a different key.** Outbound AI calls live on the
   platform API at `api.speko.dev` with a platform key, not the router key. The companion
   `speko` skill covers that surface.

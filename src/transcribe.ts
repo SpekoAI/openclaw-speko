@@ -4,7 +4,13 @@ import {
   postTranscriptionRequest,
   requireTranscriptionText,
 } from "openclaw/plugin-sdk/provider-http";
-import { buildRoutingHeaders, normalizeSpekoBaseUrl, type SpekoPluginConfig } from "./config.js";
+import {
+  buildRoutingHeaders,
+  normalizeSpekoBaseUrl,
+  SPEKO_DEFAULT_LANGUAGE,
+  SPEKO_LANGUAGE_AUTO,
+  type SpekoPluginConfig,
+} from "./config.js";
 
 export type SpekoTranscribeParams = {
   buffer: Buffer;
@@ -34,8 +40,8 @@ export type SpekoTranscribeOutcome = { text: string; model?: string };
 export async function transcribeSpeko(params: SpekoTranscribeParams): Promise<SpekoTranscribeOutcome> {
   const routing = params.routing ?? {};
   const fields: Record<string, string> = { model: params.model ?? routing.stt?.model ?? "auto" };
-  const language = params.language ?? routing.language;
-  if (language) fields.language = language;
+  const language = params.language ?? routing.language ?? SPEKO_DEFAULT_LANGUAGE;
+  if (language && language !== SPEKO_LANGUAGE_AUTO) fields.language = language;
 
   const formData = buildAudioTranscriptionFormData({
     buffer: params.buffer,

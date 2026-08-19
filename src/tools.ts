@@ -1,6 +1,6 @@
 import { Type } from "typebox";
 import type { AnyAgentTool } from "openclaw/plugin-sdk/plugin-entry";
-import { normalizeSpekoBaseUrl, type SpekoPluginConfig } from "./config.js";
+import { normalizeSpekoBaseUrl, SPEKO_DEFAULT_LANGUAGE, type SpekoPluginConfig } from "./config.js";
 import { fetchSpekoModels, selectRoutableStage, type SpekoStage } from "./models.js";
 
 const STAGE_VALUES: SpekoStage[] = ["llm", "stt", "tts"];
@@ -90,7 +90,7 @@ export function createRoutingPreviewTool(deps: SpekoToolDeps): AnyAgentTool {
         max_price?: number;
       };
       const query = new URLSearchParams({ stage: args.stage });
-      const language = args.language ?? config.language;
+      const language = args.language ?? config.language ?? SPEKO_DEFAULT_LANGUAGE;
       if (language) query.set("language", language);
       const objective = args.objective ?? config.objective;
       if (objective) query.set("objective", objective);
