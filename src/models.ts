@@ -74,7 +74,21 @@ export type OpenClawModelRow = {
   contextWindow: number;
   maxTokens: number;
   cost: OpenClawModelCost;
+  compat: { supportsStore: false };
 };
+
+/**
+ * The router validates the request body strictly and rejects OpenAI's `store`
+ * property outright:
+ *
+ *   400 {"message":"store: property 'store' is unsupported",
+ *        "code":"wrong_api_format"}
+ *
+ * OpenClaw's OpenAI client sends `store: false` on every chat turn, so without
+ * this flag every routed turn fails. Declared per model because that is where
+ * OpenClaw reads compat from.
+ */
+const SPEKO_COMPAT = { supportsStore: false } as const;
 
 /**
  * OpenClaw requires a four-way cost breakdown. Speko publishes one blended
@@ -105,6 +119,7 @@ export function toOpenClawModelRows(rows: SpekoModelRow[]): OpenClawModelRow[] {
     contextWindow: DEFAULT_CONTEXT_WINDOW,
     maxTokens: DEFAULT_MAX_TOKENS,
     cost: toOpenClawCost(null),
+    compat: SPEKO_COMPAT,
   };
   const pinned = llm.map((row) => ({
     id: row.id,
@@ -117,6 +132,7 @@ export function toOpenClawModelRows(rows: SpekoModelRow[]): OpenClawModelRow[] {
     contextWindow: DEFAULT_CONTEXT_WINDOW,
     maxTokens: DEFAULT_MAX_TOKENS,
     cost: toOpenClawCost(row.costPerMinUsd),
+    compat: SPEKO_COMPAT,
   }));
   return [auto, ...pinned];
 }

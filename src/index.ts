@@ -41,6 +41,7 @@ function buildFallbackProvider(apiKey: string, baseUrl: string): ModelProviderCo
         cost: toOpenClawCost(null),
         contextWindow: 128_000,
         maxTokens: 8_192,
+        compat: { supportsStore: false },
       },
     ],
   };
@@ -111,6 +112,7 @@ export default definePluginEntry({
         contextWindow: 128_000,
         maxTokens: 8_192,
         cost: toOpenClawCost(null),
+        compat: { supportsStore: false },
       }),
     });
 
@@ -148,7 +150,11 @@ export default definePluginEntry({
       defaultTimeoutMs: 120_000,
       defaultModel: SPEKO_AUTO_MODEL_ID,
       resolveConfig: (ctx) => resolveSpeechConfig(ctx.cfg) as unknown as Record<string, unknown>,
-      isConfigured: ({ providerConfig }) => Boolean((providerConfig as SpekoSpeechProviderConfig).apiKey),
+      // The host may probe this before resolveConfig has run, in which case
+      // providerConfig is the bare config block and carries no key. Fall back to
+      // the env var so a provider that will work is not reported unconfigured.
+      isConfigured: ({ providerConfig }) =>
+        Boolean((providerConfig as SpekoSpeechProviderConfig).apiKey ?? resolveApiKey()),
       synthesize: async (req) => {
         const outcome = await synthesizeSpeko({
           text: req.text,
