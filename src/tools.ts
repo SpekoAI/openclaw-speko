@@ -23,6 +23,31 @@ type RoutingPreview = {
   runners_up?: RunnerUp[];
 };
 
+/**
+ * The router keeps its own allow-list of enabled languages, and it is narrower
+ * than the language coverage advertised in `/v1/models`: a model row can claim
+ * `zh` while the router refuses `X-Speko-Language: zh` outright. The refusal
+ * helpfully names the enabled set, so surface that instead of the raw body —
+ * otherwise the caller only sees "400" and has no way to learn the real list.
+ */
+async function describeRoutingError(response: Response): Promise<string> {
+  const raw = await response.text();
+  try {
+    const parsed = JSON.parse(raw) as {
+      error?: { code?: string; message?: string; details?: { allowed_languages?: string[]; detail?: string } };
+    };
+    const error = parsed.error;
+    if (!error) return raw.slice(0, 200);
+    const allowed = error.details?.allowed_languages;
+    if (allowed?.length) {
+      return `${error.message ?? error.code ?? "routing error"} Enabled languages: ${allowed.join(", ")}.`;
+    }
+    return [error.message, error.details?.detail].filter(Boolean).join(" ") || raw.slice(0, 200);
+  } catch {
+    return raw.slice(0, 200);
+  }
+}
+
 type SpekoToolDeps = {
   resolveApiKey: () => string | undefined;
   resolveConfig: () => SpekoPluginConfig;
@@ -107,7 +132,7 @@ export function createRoutingPreviewTool(deps: SpekoToolDeps): AnyAgentTool {
         signal,
       });
       if (!response.ok) {
-        throw new Error(`Speko routing preview failed: ${response.status} ${(await response.text()).slice(0, 200)}`);
+        throw new Error(`Speko routing preview failed (${response.status}): ${await describeRoutingError(response)}`);
       }
       const preview = (await response.json()) as RoutingPreview;
       return textResult(formatPreview(args.stage, preview), preview);
@@ -164,6 +189,18 @@ export function createModelsTool(deps: SpekoToolDeps): AnyAgentTool {
       });
       let stageRows = selectRoutableStage(rows, args.stage);
       if (args.language) {
+        // `/v1/models` advertises broader language coverage than the router has
+        // enabled, so listing rows for a language the router refuses would be
+        // actively misleading. Ask the router first.
+        const probe = await (deps.fetchFn ?? fetch)(
+          `${normalizeSpekoBaseUrl(config.baseUrl)}/routing/preview?stage=${args.stage}&language=${encodeURIComponent(args.language)}`,
+          { headers: { Authorization: `Bearer ${apiKey}` }, signal },
+        );
+        if (!probe.ok) {
+          throw new Error(
+            `Speko cannot route ${args.stage} for language "${args.language}": ${await describeRoutingError(probe)}`,
+          );
+        }
         const wanted = args.language.split("-")[0]!.toLowerCase();
         stageRows = stageRows.filter((row) => row.languages.some((lang) => lang.toLowerCase().startsWith(wanted)));
       }

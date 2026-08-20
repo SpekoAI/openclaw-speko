@@ -87,6 +87,10 @@ selected or pinned.
 - **Context windows are conservative defaults.** `/v1/models` does not publish a per-vendor
   window, and the router holds the real one, so this plugin advertises 128k rather than
   guessing higher.
+- **Nine languages are enabled on the router** — `en`, `ar`, `de`, `es`, `fr`, `hi`, `nb`,
+  `ta`, `te`. `/v1/models` advertises wider coverage than the router accepts, so a row can
+  claim `zh` while `X-Speko-Language: zh` is refused. Both tools now surface the enabled list
+  in the error instead of a bare 400.
 - **The language default is deliberate.** Without a language header the router falls back to
   whatever the API key's policy carries, which is invisible from OpenClaw and is not always
   English — a first run could quietly come back in another language and read as a bug. So the

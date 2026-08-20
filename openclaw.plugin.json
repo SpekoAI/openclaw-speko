@@ -2,7 +2,7 @@
   "id": "speko",
   "name": "Speko",
   "description": "Benchmark-routed LLM, speech and transcription behind one Speko key.",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "providers": [
     "speko"
   ],

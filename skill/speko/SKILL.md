@@ -34,8 +34,13 @@ curl -s "https://api.speko.ai/v1/routing/preview?stage=tts&language=en&objective
 ```
 
 `stage` is `stt`, `llm` or `tts`. `objective` is `latency`, `cost`, `quality` or `balanced`.
-`language` defaults to `en`; swap it for any BCP 47 tag to see the route change — the picked
+`language` defaults to `en`; swap it for any enabled tag to see the route change — the picked
 vendor genuinely differs per language, which is the whole point of asking.
+
+**Nine languages are enabled on the router:** `en`, `ar`, `de`, `es`, `fr`, `hi`, `nb`, `ta`,
+`te`. Anything else is refused with `unsupported_language`, and **`GET /v1/models` is not the
+authority here** — a model row can advertise `zh` or `vi` while the router has that language
+turned off. Trust the preview, not the catalog's language list.
 `evidence: "measured"` means the pick rests on benchmark data rather than a fallback, and
 `measured` is the date window those readings came from. Quote both when you explain a choice —
 they are why the answer is trustworthy.
