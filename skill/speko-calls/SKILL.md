@@ -49,6 +49,7 @@ volume. Decline impersonation of a real person or organisation on the call.
 
 ```bash
 curl -s https://api.speko.dev/v1/phone-numbers \
+  -H "User-Agent: openclaw-speko/0.1.4" \
   -H "Authorization: Bearer $SPEKO_PLATFORM_API_KEY" | jq '.[] | {id, e164, direction}'
 ```
 
@@ -60,6 +61,7 @@ number, use it; if several, ask which; if none, say one has to be provisioned fi
 
 ```bash
 curl -s https://api.speko.dev/v1/sessions/phone \
+  -H "User-Agent: openclaw-speko/0.1.4" \
   -H "Authorization: Bearer $SPEKO_PLATFORM_API_KEY" -H "Content-Type: application/json" \
   -d '{
     "to": "+15551234567",
@@ -83,9 +85,11 @@ first when you are unsure about the shape.
 
 ```bash
 curl -s https://api.speko.dev/v1/calls/$ID \
+  -H "User-Agent: openclaw-speko/0.1.4" \
   -H "Authorization: Bearer $SPEKO_PLATFORM_API_KEY" | jq '{status, duration_seconds, ended_at}'
 
 curl -s https://api.speko.dev/v1/calls/$ID/report \
+  -H "User-Agent: openclaw-speko/0.1.4" \
   -H "Authorization: Bearer $SPEKO_PLATFORM_API_KEY" | jq '{summary, outcome, cost_micro_usd}'
 ```
 

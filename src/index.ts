@@ -1,4 +1,5 @@
 import { definePluginEntry } from "openclaw/plugin-sdk/plugin-entry";
+import { SPEKO_USER_AGENT } from "./user-agent.js";
 import { createProviderApiKeyAuthMethod } from "openclaw/plugin-sdk/provider-auth-api-key";
 import type { ModelProviderConfig } from "openclaw/plugin-sdk/provider-model-shared";
 import {
@@ -39,6 +40,7 @@ function buildFallbackProvider(apiKey: string, baseUrl: string): ModelProviderCo
         reasoning: true,
         input: ["text"],
         cost: toOpenClawCost(null),
+        headers: { "User-Agent": SPEKO_USER_AGENT },
         contextWindow: 128_000,
         maxTokens: 8_192,
         compat: { supportsStore: false },
@@ -112,6 +114,7 @@ export default definePluginEntry({
         contextWindow: 128_000,
         maxTokens: 8_192,
         cost: toOpenClawCost(null),
+        headers: { "User-Agent": SPEKO_USER_AGENT },
         compat: { supportsStore: false },
       }),
     });

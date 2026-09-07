@@ -4,6 +4,7 @@ import {
   postTranscriptionRequest,
   requireTranscriptionText,
 } from "openclaw/plugin-sdk/provider-http";
+import { SPEKO_USER_AGENT } from "./user-agent.js";
 import {
   buildRoutingHeaders,
   normalizeSpekoBaseUrl,
@@ -50,7 +51,7 @@ export async function transcribeSpeko(params: SpekoTranscribeParams): Promise<Sp
     fields,
   });
 
-  const headers = new Headers({ Authorization: `Bearer ${params.apiKey}` });
+  const headers = new Headers({ Authorization: `Bearer ${params.apiKey}`, "User-Agent": SPEKO_USER_AGENT });
   for (const [key, value] of Object.entries(buildRoutingHeaders(routing))) headers.set(key, value);
 
   const { response, release } = await postTranscriptionRequest({
