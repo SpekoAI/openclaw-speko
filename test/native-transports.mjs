@@ -108,13 +108,12 @@ async function child() {
   console.log("NATIVE_HOST_RESULT:" + JSON.stringify({ status: "pass", hostVersion: hostPkg.version, hostTransportSha256: sha(source) }));
 }
 
-async function command(command, args, env) {
-  const process = spawn(command, args, { env, stdio: ["ignore", "pipe", "pipe"] });
+async function collectOutput(child) {
   let stdout = "", stderr = "";
-  const timer = setTimeout(() => process.kill("SIGKILL"), 25000);
-  process.stdout.on("data", (chunk) => { stdout += chunk; if (stdout.length > 1048576) process.kill("SIGKILL"); });
-  process.stderr.on("data", (chunk) => { stderr += chunk; if (stderr.length > 1048576) process.kill("SIGKILL"); });
-  const code = await new Promise((resolve, reject) => { process.once("error", reject); process.once("close", resolve); });
+  const timer = setTimeout(() => child.kill("SIGKILL"), 25000);
+  child.stdout.on("data", (chunk) => { stdout += chunk; if (stdout.length > 1048576) child.kill("SIGKILL"); });
+  child.stderr.on("data", (chunk) => { stderr += chunk; if (stderr.length > 1048576) child.kill("SIGKILL"); });
+  const code = await new Promise((resolve, reject) => { child.once("error", reject); child.once("close", resolve); });
   clearTimeout(timer);
   return { code, stdout, stderr };
 }
@@ -219,9 +218,10 @@ async function main() {
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   const local = `http://127.0.0.1:${server.address().port}`;
   try {
-    const result = await command(process.execPath, [fileURLToPath(import.meta.url), packageRoot, "--child"], {
-      ...environment, HTTP_PROXY: local, http_proxy: local, NODE_USE_ENV_PROXY: "1", NO_PROXY: "", no_proxy: "",
-    });
+    const result = await collectOutput(spawn(process.execPath, [fileURLToPath(import.meta.url), packageRoot, "--child"], {
+      env: { ...environment, HTTP_PROXY: local, http_proxy: local, NODE_USE_ENV_PROXY: "1", NO_PROXY: "", no_proxy: "" },
+      shell: false, stdio: ["ignore", "pipe", "pipe"],
+    }));
     assert.equal(result.code, 0, result.stderr + result.stdout + JSON.stringify({ failures, requests }));
     const routerRequests = requests.filter((request) => new URL(request.url).hostname === "router.example.com");
     assert.equal(routerRequests.length, 14);
@@ -240,9 +240,10 @@ async function main() {
     for (const source of commands) {
       assert.ok(source.startsWith("curl -s https://api.speko.dev/v1/"));
       const actual = source.replaceAll("https://api.speko.dev", local);
-      const call = await command("/bin/bash", ["-c", actual], {
-        ...environment, SPEKO_PLATFORM_API_KEY: platformKey, ID: "11111111-1111-4111-8111-111111111111", NO_PROXY: "*", no_proxy: "*",
-      });
+      const call = await collectOutput(spawn("/bin/bash", ["-c", actual], {
+        env: { ...environment, SPEKO_PLATFORM_API_KEY: platformKey, ID: "11111111-1111-4111-8111-111111111111", NO_PROXY: "*", no_proxy: "*" },
+        shell: false, stdio: ["ignore", "pipe", "pipe"],
+      }));
       assert.equal(call.code, 0, call.stderr);
     }
     assert.equal(requests.length, 18);

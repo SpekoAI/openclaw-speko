@@ -25,7 +25,7 @@
   },
   "devDependencies": {
     "clawhub": "latest",
-    "openclaw": "latest",
+    "openclaw": "2026.7.1-2",
     "typescript": "^5.9.0",
     "vitest": "^3.2.0"
   },
