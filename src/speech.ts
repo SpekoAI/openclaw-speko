@@ -1,4 +1,5 @@
 import { assertOkOrThrowProviderError, postJsonRequest } from "openclaw/plugin-sdk/provider-http";
+import { SPEKO_USER_AGENT } from "./user-agent.js";
 import {
   buildRoutingHeaders,
   formatRouteDecision,
@@ -71,7 +72,11 @@ export async function synthesizeSpeko(params: {
   const speed = params.overrides?.speed ?? tts.speed;
   if (typeof speed === "number") body.speed = speed;
 
-  const headers = new Headers({ "Content-Type": "application/json", Authorization: `Bearer ${config.apiKey}` });
+  const headers = new Headers({
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${config.apiKey}`,
+    "User-Agent": SPEKO_USER_AGENT,
+  });
   for (const [key, value] of Object.entries(buildRoutingHeaders(config.routing))) headers.set(key, value);
 
   const { response, release } = await postJsonRequest({

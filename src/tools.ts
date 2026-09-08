@@ -1,4 +1,5 @@
 import { Type } from "typebox";
+import { SPEKO_USER_AGENT } from "./user-agent.js";
 import type { AnyAgentTool } from "openclaw/plugin-sdk/plugin-entry";
 import { normalizeSpekoBaseUrl, SPEKO_DEFAULT_LANGUAGE, type SpekoPluginConfig } from "./config.js";
 import { fetchSpekoModels, selectRoutableStage, type SpekoStage } from "./models.js";
@@ -128,7 +129,7 @@ export function createRoutingPreviewTool(deps: SpekoToolDeps): AnyAgentTool {
 
       const doFetch = deps.fetchFn ?? fetch;
       const response = await doFetch(`${normalizeSpekoBaseUrl(config.baseUrl)}/routing/preview?${query.toString()}`, {
-        headers: { Authorization: `Bearer ${apiKey}` },
+        headers: { Authorization: `Bearer ${apiKey}`, "User-Agent": SPEKO_USER_AGENT },
         signal,
       });
       if (!response.ok) {
@@ -194,7 +195,7 @@ export function createModelsTool(deps: SpekoToolDeps): AnyAgentTool {
         // actively misleading. Ask the router first.
         const probe = await (deps.fetchFn ?? fetch)(
           `${normalizeSpekoBaseUrl(config.baseUrl)}/routing/preview?stage=${args.stage}&language=${encodeURIComponent(args.language)}`,
-          { headers: { Authorization: `Bearer ${apiKey}` }, signal },
+          { headers: { Authorization: `Bearer ${apiKey}`, "User-Agent": SPEKO_USER_AGENT }, signal },
         );
         if (!probe.ok) {
           throw new Error(

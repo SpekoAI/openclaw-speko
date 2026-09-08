@@ -1,8 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { transcribeSpeko } from "./transcribe.js";
 
 function stubFetch(response: Response, captured: { request?: Request } = {}) {
-  return (async (input: RequestInfo | URL, init?: RequestInit) => {
+  return vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     captured.request = new Request(input as never, init);
     return response;
   }) as unknown as typeof fetch;

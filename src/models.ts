@@ -1,4 +1,5 @@
 import { normalizeSpekoBaseUrl } from "./config.js";
+import { SPEKO_USER_AGENT } from "./user-agent.js";
 
 /** One row of `GET /v1/models`. */
 export type SpekoModelRow = {
@@ -36,7 +37,7 @@ export async function fetchSpekoModels(params: {
   const base = normalizeSpekoBaseUrl(params.baseUrl);
   const doFetch = params.fetchFn ?? fetch;
   const response = await doFetch(`${base}/models`, {
-    headers: { Authorization: `Bearer ${params.apiKey}` },
+    headers: { Authorization: `Bearer ${params.apiKey}`, "User-Agent": SPEKO_USER_AGENT },
     signal: params.signal,
   });
   if (!response.ok) {
@@ -74,6 +75,7 @@ export type OpenClawModelRow = {
   contextWindow: number;
   maxTokens: number;
   cost: OpenClawModelCost;
+  headers?: { "User-Agent": string };
   compat: { supportsStore: false };
 };
 
@@ -119,6 +121,7 @@ export function toOpenClawModelRows(rows: SpekoModelRow[]): OpenClawModelRow[] {
     contextWindow: DEFAULT_CONTEXT_WINDOW,
     maxTokens: DEFAULT_MAX_TOKENS,
     cost: toOpenClawCost(null),
+    headers: { "User-Agent": SPEKO_USER_AGENT },
     compat: SPEKO_COMPAT,
   };
   const pinned = llm.map((row) => ({
@@ -132,6 +135,7 @@ export function toOpenClawModelRows(rows: SpekoModelRow[]): OpenClawModelRow[] {
     contextWindow: DEFAULT_CONTEXT_WINDOW,
     maxTokens: DEFAULT_MAX_TOKENS,
     cost: toOpenClawCost(row.costPerMinUsd),
+    headers: { "User-Agent": SPEKO_USER_AGENT },
     compat: SPEKO_COMPAT,
   }));
   return [auto, ...pinned];
